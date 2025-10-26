@@ -36,7 +36,8 @@ const MeetUsUserSchema = new mongoose.Schema({
     birthdate: { type: String },
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'MeetUsUser' }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'MeetUsUser' }],
-    posts: [{ type: mongoose.Schema.Types.Objecd, ref: 'UserPosts' }]
+    posts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'UserPosts' }]
+
 
 }, {
     timestamps: true

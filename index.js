@@ -1,12 +1,18 @@
 const express = require("express")
 const mongoose=require("mongoose")
 const cors= require("cors")
+const cookieParser =require("cookie-parser")
+
 require("dotenv").config()
 
  const app=express()
  app.use(express.json()); 
 
- app.use(cors())
+ app.use(cors({credentials:true}))
+ app.use(cookieParser())
+
+
+
 
 app.use('/api/meetus',require("./routes/registerMeetUsUser"))
 app.use('/api/meetus/help',require("./routes/helpCenter"))

@@ -6,10 +6,12 @@ const User = require("../models/User");
 const dotenv = require("dotenv");
 const bcrypt = require("bcryptjs");
 const { randomUUID } = require('crypto')
+const authenticateUserID =require('../middleware/authenticateUserID.js')
 dotenv.config();
 
 const verificationStore = new Map();
-const { body, validationResult } = require('express-validator')
+const { body, validationResult } = require('express-validator');
+const { log } = require("console");
 router.post("/verify-request", async (req, res) => {
   try {
     const { email, username } = req.body;
@@ -44,7 +46,7 @@ router.post("/register", [
   body("email").isEmail().withMessage("Email notugri")
 
 
-], async (req, res) => {
+],authenticateUserID, async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() })
@@ -54,19 +56,19 @@ router.post("/register", [
     const { fullname, email, username, password, code, location, bio, role } = req.body;
 
     if (!username || !password || !code || !email) {
-      return res.status(400).json({ message: "Barcha maydonlarni to‘ldiring" });
+      return res.status(400).json({ warning: "Barcha maydonlarni to‘ldiring" });
     }
 
     const existingUser = await User.findOne({ username });
-    if (existingUser) return res.status(400).json({ message: "Bu username allaqachon olingan" });
+    if (existingUser) return res.status(400).json({ warning: "Bu username allaqachon olingan" });
 
     const record = verificationStore.get(email);
     if (!record || record.code !== code) {
-      return res.status(401).json({ message: "Kod noto‘g‘ri yoki mavjud emas" });
+      return res.status(401).json({ warning: "Kod noto‘g‘ri yoki mavjud emas" });
     }
 
     if (Date.now() - record.createdAt > 3 * 60 * 1000) {
-      return res.status(410).json({ message: "Kod muddati tugagan" });
+      return res.status(410).json({ warning: "Kod muddati tugagan" });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -85,13 +87,14 @@ router.post("/register", [
     });
 
     await newUser.save();
-    console.log(newUser);
 
     verificationStore.delete(email);
 
-    res.status(201).json({ message: "Ro‘yxatdan o‘tish muvaffaqiyatli" });
+    res.status(201).json({ success: "Ro'yxatdan o'tish muvaffaqiyatli" });
   } catch (error) {
-    res.status(500).json({ message: "Serverda xatolik", error: error.message });
+    console.log("Error ocured while sign up "+error.message);
+    
+    res.status(500).json({ error: "Serverda xatolik", error: error.message });
   }
 });
 
@@ -99,29 +102,26 @@ router.post("/register", [
 router.post("/login", [
   body("username").notEmpty().withMessage("Username kerak"),
   body("password").notEmpty().withMessage("Parol kerak"),
-], async (req, res) => {
+], authenticateUserID,async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-
   try {
     const { username, password } = req.body;
     const user = await User.findOne({ username });
-    if (!user) return res.status(404).json({ message: "Foydalanuvchi topilmadi" });
+    if (!user) return res.status(404).json({ warning: "Foydalanuvchi topilmadi" });
 
-    const isMatch = await  bcrypt.compare(password, user.password);
-    console.log(isMatch);
-    
-    if (!isMatch) return res.status(401).json({ error: "Parol noto‘g‘ri" });
+    const isMatch = await bcrypt.compare(password, user.password);    
+    if (!isMatch) return res.status(401).json({ warning: "Parol noto'g'ri" });
     res.status(200).json({
-      message: "Kirish muvaffaqiyatli",
+      success: "Kirish muvaffaqiyatli",
       user
     });
-    console.log(user);
     
   } catch (err) {
-    res.status(500).json({ message: 'server error' })
+   console.log("Error ocured while login account "+err.message)
+    res.status(500).json({ error: 'server error' })
   }
 });
 
@@ -265,8 +265,6 @@ router.post('/no-password', async (req, res) => {
 
 
 })
-
-
 
 
 router.put("/:id", async (req, res) => {
