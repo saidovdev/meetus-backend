@@ -12,7 +12,7 @@
        if(!uniqueUser) return res.status(404).json({warning:"User not found"})
 
       next()
-
+ res.status(200).json({success:"User found successfully"})
     } catch (error) {
        console.log("Error ocured  in middleware  while cheking unique id"+error.message);
        res.status(500).json({error:"Internal server error"})
