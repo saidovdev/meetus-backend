@@ -7,7 +7,7 @@
 
     module.exports.postLinks=async(req,res)=>{
         try {
-            const id=req.params.id
+            const id=req.user.id
             if (!id || !isValidObjectId(id)) return res.status(400).json({ message: "Id is not defined or invalid id" })
             const {link,name}=req.body
             if(!link) return res.status(400).json({message:"Link kerak "})
@@ -25,10 +25,11 @@
 
     module.exports.putLinks=async(req,res)=>{
         try {
+            const userId=req.user.id
             const id=req.params.id
             if (!id || !isValidObjectId(id)) return res.status(400).json({ message: "Id is not defined or invalid id" })
 
-            const {userId,name,link}=req.body
+            const {name,link}=req.body
             if (!userId || !isValidObjectId(userId)) return res.status(400).json({ message: "userId is not defined or invalid userid" })
 
 
@@ -59,14 +60,11 @@
 
 module.exports.postContact=async(req,res)=>{
   try {
-    const userId=req.params.id
-
+    const userId=req.user.id
       const { instagram, telegram, phone,whatsApp,email}=req.body
-
-    if(!userId) return res.status(400).json({message:"User id is undefined"})
-      if (!userId || !isValidObjectId(userId)) return res.status(400).json({ message: "userId is not defined or invalid userid" })
-
-     const user =await UserModel.findById(userId)
+       if(!userId) return res.status(400).json({message:"User id is undefined"})
+       if (!userId || !isValidObjectId(userId)) return res.status(400).json({ message: "userId is not defined or invalid userid" })
+      const user =await UserModel.findById(userId)
      if(!user) return res.status(404).json({mesage:"User not exist"})
 let updated=false
         if(instagram && instagram.startsWith('https://www.instagram.com/') && instagram!==user.socialLinks.instagram) 
@@ -105,7 +103,7 @@ res.status(200).json({message:"Social links successfully posted",user})
 
 module.exports.deleteContact = async (req, res) => {
     try {
-        const userId = req.params.id;
+        const userId = req.user.id
         if (!userId || !isValidObjectId(userId)) return res.status(400).json({ message: "userId is not defined or invalid userid" })
 
         const { deleteObject } = req.body;

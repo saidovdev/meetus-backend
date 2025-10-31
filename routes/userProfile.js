@@ -24,8 +24,11 @@ const storage = new CloudinaryStorage({
 
 const parser = multer({ storage: storage })
 
-router.post('/:id/add-profile-img', parser.single('image'), async (req, res) => {
-    const userId = req.params.id
+router.use(authenticateToken)
+
+
+router.post('/add-profile-img', parser.single('image'), async (req, res) => {
+    const userId = req.user.id
     const imageUrl = req.file.path
     const publicId = req.file.filename
     if (!isValidObjectId(userId) || !userId) {
@@ -64,8 +67,8 @@ router.post('/:id/add-profile-img', parser.single('image'), async (req, res) => 
 })
 
 
-router.post('/:id/cover-img', parser.single('image'), async (req, res) => {
-    const userId = req.params.id
+router.post('/cover-img', parser.single('image'), async (req, res) => {
+    const userId = req.user.id
     const { coverImgPublicId, coverImgUrl } = req.body
     if (!isValidObjectId(userId) || !userId) return res.status(400).json({ warning: 'User id is undefined' })
     if (!coverImgUrl) return res.status(400).json({ warning: 'All fields required' })
@@ -87,8 +90,8 @@ router.post('/:id/cover-img', parser.single('image'), async (req, res) => {
 })
 
 
-router.post('/:id/delete/coverImg', async (req, res) => {
-    const userId = req.params.id
+router.post('/delete/coverImg', async (req, res) => {
+    const userId = req.user.id
     const { coverImgPublicId } = req.body
     if (!isValidObjectId(userId) || !userId) return res.status(400).json({ warning: 'User id undefined' })
     if (!coverImgPublicId) res.status(400).json({ warning: 'All fiels required' })
@@ -115,7 +118,7 @@ router.post('/:id/delete/coverImg', async (req, res) => {
 
 
 router.post('/:id/delete/img', async (req, res) => {
-    const id = req.params.id
+    const id = req.user.id
 
     const { profileImgPublicId } = req.body
 
@@ -150,13 +153,13 @@ router.post('/:id/delete/img', async (req, res) => {
     }
 })
 
-router.put('/:id', async (req, res) => {
+router.put('/edit', async (req, res) => {
     const { username, bio, fullname, location, gender, birthdate } = req.body
     try {
 
-        if (!isValidObjectId(req.params.id)) return res.status(400).json({ warning: "id is not defind or invalid" })
+        if (!isValidObjectId(req.user.id)) return res.status(400).json({ warning: "id is not defind or invalid" })
 
-        const currentUser = await User.findById(req.params.id)
+        const currentUser = await User.findById(req.user.id)
 
         if (!currentUser) return res.status(404).json({ warning: 'User not found' })
 
@@ -181,8 +184,8 @@ router.put('/:id', async (req, res) => {
 
 
 
-        await User.findByIdAndUpdate(req.params.id, updateFields, { new: true })
-        res.status(200).json({ succes: "Updated succesfully", user: currentUser })
+        await User.findByIdAndUpdate(req.user.id, updateFields, { new: true })
+        res.status(200).json({ succes: "Updated succesfully",})
 
     } catch (error) {
         console.log("Error while updating profile ", error.message);
@@ -190,52 +193,52 @@ router.put('/:id', async (req, res) => {
     }
 })
 
-router.put('/:id/category', async (req, res) => {
-    try {
-        const { roleVisible, roleName, roleKey } = req.body;
+// router.put('/:id/category', async (req, res) => {
+//     try {
+//         const {  roleName, roleKey } = req.body;
 
-        if (!isValidObjectId(req.params.id)) {
+//         if (!isValidObjectId(req.params.id)) {
 
-            return res.status(400).json({ warning: "id is not defined or invalid" });
-        }
+//             return res.status(400).json({ warning: "id is not defined or invalid" });
+//         }
 
-        const currentUser = await User.findById(req.params.id);
-        if (!currentUser) {
-            return res.status(404).json({ warning: 'User not found' });
-        }
+//         const currentUser = await User.findById(req.params.id);
+//         if (!currentUser) {
+//             return res.status(404).json({ warning: 'User not found' });
+//         }
 
-        const updateFields = {
-            role: {
-                name: roleName ?? currentUser.role.name,
-                visible: roleVisible ?? currentUser.role.visible,
-                key: roleKey ?? currentUser.role.key,
-            }
-        };
+//         const updateFields = {
+//             role: {
+//                 name: roleName ?? currentUser.role.name,
+//                 visible: roleVisible ?? currentUser.role.visible,
+//                 key: roleKey ?? currentUser.role.key,
+//             }
+//         };
 
-        if (
-            updateFields.role.name === currentUser.role.name &&
-            updateFields.role.visible === currentUser.role.visible &&
-            updateFields.role.key === currentUser.role.key
-        ) {
-            return res.status(200).json({ warning: 'Any data updated' });
-        }
+//         if (
+//             updateFields.role.name === currentUser.role.name &&
+//             updateFields.role.visible === currentUser.role.visible &&
+//             updateFields.role.key === currentUser.role.key
+//         ) {
+//             return res.status(200).json({ warning: 'Any data updated' });
+//         }
 
-        const updatedUser = await User.findByIdAndUpdate(
-            req.params.id,
-            updateFields,
-            { new: true }
-        );
+//         const updatedUser = await User.findByIdAndUpdate(
+//             req.params.id,
+//             updateFields,
+//             { new: true }
+//         );
 
-        res.status(200).json({
-            success: "Updated successfully",
-            user: updatedUser
-        });
+//         res.status(200).json({
+//             success: "Updated successfully",
+//             user: updatedUser
+//         });
 
-    } catch (error) {
-        console.log("Error while updating profile category ", error.message);
-        res.status(500).json({ error: 'Server error' })
-    }
-});
+//     } catch (error) {
+//         console.log("Error while updating profile category ", error.message);
+//         res.status(500).json({ error: 'Server error' })
+//     }
+// });
 
 
 

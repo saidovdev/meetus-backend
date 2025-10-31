@@ -1,17 +1,15 @@
 const express=require("express")
 const router=express.Router()
 const User=require('../models/User')
-// const authenticateToken=require("../middleware/authenticateToken")
+const authenticateToken=require("../middleware/authenticateToken")
 
-router.get('/:id/:role',async(req,res)=>{
+router.get('/',authenticateToken,async(req,res)=>{
     try{
-        const userId =req.params.id
-        const role=req.params.role
+        const userId =req.user.id
         const userInfo=await User.findById(userId)
-        if (role == "isAdmin") return res.json(userInfo) 
         if(!userInfo) return res.status(404).json({message:"User va malumotlari topilmadi"})
        res.json(userInfo) 
-    }catch(err){
+    }    catch(err){
         console.log(err);
         res.status(500).json({message:"Server Hatosi",err})
 

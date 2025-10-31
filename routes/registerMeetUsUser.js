@@ -5,13 +5,11 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const dotenv = require("dotenv");
 const bcrypt = require("bcryptjs");
-const { randomUUID } = require('crypto')
 const authenticateUserID =require('../middleware/authenticateUserID.js')
 dotenv.config();
 
 const verificationStore = new Map();
 const { body, validationResult } = require('express-validator');
-const { log } = require("console");
 router.post("/verify-request", async (req, res) => {
   try {
     const { email, username } = req.body;
@@ -41,26 +39,26 @@ router.post("/verify-request", async (req, res) => {
 
 
 router.post("/register", [
-  body("username").isLength({ min: 3 }).withMessage("username juda qisqa kupaytirsh kerak"),
-  body("password").isLength({ min: 6 }).withMessage("Parol juda oson murakkabroq parol kerak"),
   body("email").isEmail().withMessage("Email notugri")
 
 
-],authenticateUserID, async (req, res) => {
+], async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() })
   }
 
   try {
-    const { fullname, email, username, password, code, location, bio, role } = req.body;
+    const {  email, username, password, code, role } = req.body;
 
-    if (!username || !password || !code || !email) {
+    if (!username || !password || !code || !email ||!role) {
       return res.status(400).json({ warning: "Barcha maydonlarni to‘ldiring" });
     }
 
     const existingUser = await User.findOne({ username });
-    if (existingUser) return res.status(400).json({ warning: "Bu username allaqachon olingan" });
+
+    if (existingUser) return res.status(409).json({ warning: "Bu username allaqachon olingan" });
+    
 
     const record = verificationStore.get(email);
     if (!record || record.code !== code) {
@@ -75,15 +73,10 @@ router.post("/register", [
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new User({
-      fullname,
-      idUser: randomUUID(),
       email,
       username,
       password: hashedPassword,
-      location,
-      bio,
       role,
-      createdAt: new Date(),
     });
 
     await newUser.save();
@@ -102,7 +95,7 @@ router.post("/register", [
 router.post("/login", [
   body("username").notEmpty().withMessage("Username kerak"),
   body("password").notEmpty().withMessage("Parol kerak"),
-], authenticateUserID,async (req, res) => {
+],async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -114,6 +107,21 @@ router.post("/login", [
 
    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ warning: "Parol noto'g'ri" });
+
+const accessToken=jwt.sign(
+  {
+    id:user._id,username:user.username
+  },
+  process.env.JWT_SECRET,
+  {'expiresIn':'365d'}
+)
+       res.cookie('token',accessToken,{
+        httpOnly:true,
+        secure:process.env.PROJECT_STATE==="prodcution",
+        sameSite:"lax",
+        maxAge:365*24*60*60*1000
+})
+
     res.status(200).json({
       success: "Kirish muvaffaqiyatli",
       user
@@ -126,25 +134,6 @@ router.post("/login", [
 });
 
 
-// router.post('/token', async(req,res)=>{
-//   const { refreshToken,id} =req.body
-//   if(!refreshToken) return res.status(404).json({message:"Refresh token yuq "})
-//   const user= await User.findOne({})
-//   if(!user) return res.status(404).json({message:'User yuq'})
-
-//   jwt.verify(refreshToken,process.env.JWT_REFRESH_SECRET,(err,user)=>{
-//     if(err) return res.status(403).json({message:"Refresh token yaroqsiz"})
-//     const accessToken=jwt.sign(
-//       {
-//         id:user.id,username:user.username
-//       },
-//       process.env.JWT_SECRET,
-//       {'expiresIn':'1d'}
-//     )
-//     res.json({accessToken})
-//   })
-
-// })
 router.post("/forgot", async (req, res) => {
   const { username, email } = req.body;
 
@@ -244,23 +233,19 @@ router.post('/no-password', async (req, res) => {
       idUser: user.idUser,
     },
     process.env.JWT_SECRET,
-    { expiresIn: "1d" }
+    { expiresIn: "365d" }
   );
+
+res.cookie('token',token,{
+    httpOnly:true,
+        secure:process.env.PROJECT_STATE==="production",
+        sameSite:"lax",
+        maxAge:365*24*60*60*1000
+})
 
   res.status(201).json({
     message: "Kerish mo'faqatli",
-    token,
-    user: {
-      _id: user._id,
-      username: user.username,
-      role: user.role,
-      fullname: user.fullname,
-      idUser: user.idUser,
-      bio: user.bio,
-      createdAt: user.createdAt,
-      location: user.location,
-      email: user.email,
-    }
+    user
   })
 
 

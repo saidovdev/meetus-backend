@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 const MeetUsUserSchema = new mongoose.Schema({
     fullname: { type: String },
-    idUser: { type: String, required: true },
+    idUser: { type: String},
     email: { type: String },
     username: { type: String, required: true, unique: true },
     password: { type: String },
@@ -12,12 +12,7 @@ const MeetUsUserSchema = new mongoose.Schema({
     code: { type: String },
     location: { type: String },
     bio: { type: String },
-    role: {
-        visible: { type: Boolean, default: false },
-        name: { type: String, default: "" },
-        key: { type: String, default: "" },
-
-    },
+    role: {type:String,required:true,default:'user'},
     socialLinks: {
         instagram: { type: String },
         telegram: { type: String },
