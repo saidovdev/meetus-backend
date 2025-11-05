@@ -135,33 +135,47 @@ const accessToken=jwt.sign(
 
 
 router.post("/forgot", async (req, res) => {
-  const { username, email } = req.body;
+  try {
+    const { username, email } = req.body;
 
-  if (!username || !email) {
-    return res.status(400).json({ message: "Username va emailni kiriting" });
+    if (!username || !email) {
+      return res
+        .status(400)
+        .json({ warning: "Username va emailni kiriting" });
+    }
+
+    const user = await User.findOne({ username });
+    if (!user)
+      return res.status(404).json({ message: "Foydalanuvchi topilmadi" });
+
+    if (email !== user.email) {
+      return res.status(401).json({ message: "Email noto‘g‘ri" });
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const sendVerificationCode = require("../utils/mailer");
+
+    const sent = await sendVerificationCode(user.email, code);
+    if (!sent)
+      return res.status(500).json({ message: "Kod yuborilmadi" });
+
+    verificationStore.set(user.email, { code, createdAt: Date.now() });
+
+    return res.status(200).json({ message: "Kod yuborildi" });
+  } catch (error) {
+    console.error("Error ocured while forgot-route:", error.message);
+    res
+      .status(500)
+      .json({ error: "Serverda xatolik yuz berdi, keyinroq urinib ko‘ring" });
   }
-
-  const user = await User.findOne({ username });
-  if (!user) return res.status(404).json({ message: "Foydalanuvchi topilmadi" });
-
-  if (email !== user.email) {
-    return res.status(401).json({ message: "Email noto‘g‘ri" });
-  }
-
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const sendVerificationCode = require("../utils/mailer");
-  const sent = await sendVerificationCode(user.email, code);
-
-  if (!sent) return res.status(500).json({ message: "Kod yuborilmadi" });
-
-  verificationStore.set(user.email, { code, createdAt: Date.now() });
-  res.status(200).json({ message: "Kod yuborildi" });
 });
-router.post("/forgot-password", async (req, res) => {
-  const { email, code, username } = req.body;
 
+router.post("/forgot_password", async (req, res) => {
+  const { email, code, username } = req.body;
+try {
+  
   if (!email || !code || !username) {
-    return res.status(400).json({ message: "Email, kod va yangi parolni kiriting" });
+    return res.status(400).json({ message: "Email, kod va username kiriting" });
   }
 
   const record = verificationStore.get(email);
@@ -182,14 +196,19 @@ router.post("/forgot-password", async (req, res) => {
 
 
   verificationStore.delete(email);
-  res.status(200).json({ message: 'Parol yuborildi', user: user._id })
+  res.status(200).json({ message: 'Parol yuborildi', id: user._id })
+} catch (error) {
+            console.log("Error ocured while sending verify code to sever"+error.status,error.message);
+        res.status(500).json({error:"Sever error"})  
+}
 
 });
 
-router.post('/reset-password', async (req, res) => {
+router.post('/reset_password', async (req, res) => {
   const { username, newPassword } = req.body
-  if (!username || !newPassword) {
-    res.status(400).json({ message: "Username yoki newPassword yuq" })
+ try {
+   if (!username || !newPassword) {
+    res.status(400).json({ message: "Username yoki yangi  parol yuq" })
     return
   }
 
@@ -204,27 +223,29 @@ router.post('/reset-password', async (req, res) => {
   const hashedPassword = await bcrypt.hash(newPassword, salt)
 
   user.password = hashedPassword
-  user.idUser = randomUUID()
-
-  await user.save()
-  console.log(user.idUser);
+  await user.save() 
 
   res.status(201).json({ message: "Parol mufaqatli yangilandi" })
+ } catch (error) {
+         console.log("Error ocured while sending verify code to sever"+error.status,error.message);
+        res.status(500).json({error:"Sever error"})  
+ }
 })
 
-router.post('/no-password/:id', async (req, res) => {
+router.post('/no_password/:id', async (req, res) => {
   const { username } = req.body
   const userId=req.params.id
-  if ( !userId || !username) {
+  try {
+    if ( !userId || !username) {
     
-    res.status(401).json({ message: "id yoki usernmae yuq" })
+    res.status(400).json({ message: "id yoki usernmae yuq" })
     return
 
   }
   const user = await User.findOne({ username })
   if (!user) return res.status(404).json({ message: "Foydalanuvchi topilmadi" })
 
-  if (user._id.toString() !== userId) return res.status(401).json({ message: "Id mos emas" })
+  if (user._id.toString() !== userId) return res.status(400).json({ message: "Id mos emas" })
 
 
   const token = jwt.sign(
@@ -248,6 +269,10 @@ res.cookie('token',token,{
     message: "Kerish mo'faqatli",
     user
   })
+  } catch (error) {
+        console.log("Error ocured while  login without password to sever"+error.status,error.message);
+        res.status(500).json({error:"Sever error"})  
+  }
 
 
 })
@@ -271,3 +296,4 @@ router.put("/:id", async (req, res) => {
 });
 
 module.exports = router;
+  

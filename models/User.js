@@ -2,8 +2,8 @@ const mongoose = require("mongoose")
 const MeetUsUserSchema = new mongoose.Schema({
     fullname: { type: String },
     idUser: { type: String},
-    email: { type: String },
-    username: { type: String, required: true, unique: true },
+    email: { type: String, },
+    username: { type: String,  },
     password: { type: String },
     profileImgPublicId: { type: String },
     coverImgPublicId: { type: String },
@@ -37,4 +37,4 @@ const MeetUsUserSchema = new mongoose.Schema({
 }, {
     timestamps: true
 })
-module.exports = mongoose.model('MeetUsUser', MeetUsUserSchema)
+module.exports = mongoose.model('jobusers', MeetUsUserSchema)

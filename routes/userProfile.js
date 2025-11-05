@@ -193,52 +193,6 @@ router.put('/edit', async (req, res) => {
     }
 })
 
-// router.put('/:id/category', async (req, res) => {
-//     try {
-//         const {  roleName, roleKey } = req.body;
-
-//         if (!isValidObjectId(req.params.id)) {
-
-//             return res.status(400).json({ warning: "id is not defined or invalid" });
-//         }
-
-//         const currentUser = await User.findById(req.params.id);
-//         if (!currentUser) {
-//             return res.status(404).json({ warning: 'User not found' });
-//         }
-
-//         const updateFields = {
-//             role: {
-//                 name: roleName ?? currentUser.role.name,
-//                 visible: roleVisible ?? currentUser.role.visible,
-//                 key: roleKey ?? currentUser.role.key,
-//             }
-//         };
-
-//         if (
-//             updateFields.role.name === currentUser.role.name &&
-//             updateFields.role.visible === currentUser.role.visible &&
-//             updateFields.role.key === currentUser.role.key
-//         ) {
-//             return res.status(200).json({ warning: 'Any data updated' });
-//         }
-
-//         const updatedUser = await User.findByIdAndUpdate(
-//             req.params.id,
-//             updateFields,
-//             { new: true }
-//         );
-
-//         res.status(200).json({
-//             success: "Updated successfully",
-//             user: updatedUser
-//         });
-
-//     } catch (error) {
-//         console.log("Error while updating profile category ", error.message);
-//         res.status(500).json({ error: 'Server error' })
-//     }
-// });
 
 
 
