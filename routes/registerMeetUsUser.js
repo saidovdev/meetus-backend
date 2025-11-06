@@ -190,29 +190,19 @@ try {
   const user = await User.findOne({ username });
   if (!user) return res.status(404).json({ message: "Foydalanuvchi topilmadi" });
 
- const token = jwt.sign(
-    {
-      id: user._id,
-      role: user.role,
-      username: user.username,
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: "365d" }
-  );
 
-res.cookie('token',token,{
+    res.cookie('id',user._id,{
     httpOnly:true,
         secure:process.env.PROJECT_STATE==="production",
         sameSite:"lax",
         maxAge:365*24*60*60*1000
-})
+     })
 
   await user.save();
 
 
   verificationStore.delete(email);
-  res.status(200).json({ message: 'Parol yuborildi', id: user._id })
-  return res.redirect(`${process.env.CLIENT_URL}/navigator`)
+  return res.redirect(`${process.env.CLIENT_URL}/change_password`).status(200)
 } catch (error) {
             console.log("Error ocured while sending verify code to sever"+error.status,error.message);
         res.status(500).json({error:"Sever error"})  
@@ -250,7 +240,7 @@ router.post('/reset_password', async (req, res) => {
 
 router.post('/no_password/:id', async (req, res) => {
   const { username } = req.body
-  const userId=req.params.id
+  const userId=req.cookies.id
   try {
     if ( !userId || !username) {
     
