@@ -33,7 +33,7 @@ router.get(
         maxAge: 365 * 24 * 60 * 60 * 1000,
       });
 
-      return res.redirect(`${process.env.CLIENT_URL}`);
+      return res.redirect(`${process.env.CLIENT_URL}/navigator`);
     }
 
     
