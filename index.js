@@ -49,7 +49,7 @@ app.use("/api/token", tokenRoutes);
 app.use("/api/user", linkRoute);
 app.use("/api/auth", authGoogle);
 app.use("/resume", resume);
-//sloms
+//slomssa
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDb Connected"))
