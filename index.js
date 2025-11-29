@@ -47,8 +47,8 @@ app.use("/api/get-info", userInformation);
 app.use("/api/token", tokenRoutes);
 app.use("/api/user", linkRoute);
 app.use("/api/auth", authGoogle);
-app.use("/resume", resume);
-app.use("/posts", post_project);
+app.use("/api/resume", resume);
+app.use("/api/posts", post_project);
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDb Connected"))

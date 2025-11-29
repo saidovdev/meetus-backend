@@ -1,10 +1,10 @@
 import Post from "../models/Post.js";
-import { validateProject } from "../validators/project.validator.js";
+import { validateProject } from "../validators/posts.validator.js";
 
 import {
   updateProjectFields,
   uploadImagesToCloud,
-} from "../services/project.service.js";
+} from "../services/posts.service.js";
 
 import {
   checkVideo,
@@ -13,14 +13,16 @@ import {
   handleVideoUpdate,
 } from "../services/video.service.js";
 
-import { validateIds } from "../validators/project.id.validator.js";
+import { validateIds } from "../validators/posts.id.validator.js";
 import { putUploadedImage } from "../services/image.service.js";
 
 export const post_projects_with_images = async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log(req.body);
 
     const error = validateProject(req.body);
+
     if (error) return res.status(400).json({ warning: error });
 
     const images = req.files?.length

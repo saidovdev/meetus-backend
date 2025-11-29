@@ -1,6 +1,5 @@
 import cloudinary from "../config/cloudinary.js";
 import Post from "../models/Post.js";
-import { findById } from "../models/User.js";
 export const uploadImagesToCloud = async (files) => {
   const uploaded = [];
 

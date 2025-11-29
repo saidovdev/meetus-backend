@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const PostSchema = mongoose.Schema(
   {
@@ -23,12 +23,6 @@ const PostSchema = mongoose.Schema(
       },
     ],
 
-    visibility: {
-      type: String,
-      enum: ["public", "following", "privite"],
-      default: "public",
-    },
-
     views: { type: Number, default: 0 },
     location: { type: String },
     tags: { type: [String], default: [] },
@@ -42,10 +36,15 @@ const PostSchema = mongoose.Schema(
     ],
 
     savedBy: { type: [String], default: [] },
-
     linkName: { type: String },
     link: { type: String },
-    githubLink: { type: String },
+    reports: [
+      {
+        reportedBy: { type: mongoose.Schema.Types.ObjectId, ref: "jobusers" },
+        reason: String,
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,
