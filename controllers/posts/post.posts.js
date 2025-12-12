@@ -22,7 +22,6 @@ export const post_projects_with_images = async (req, res) => {
     const userId = req.user.id;
 
     const { collaborators } = req.body;
-    console.log(collaborators);
 
     const error = await validateProject(req.body);
 
