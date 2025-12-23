@@ -1,6 +1,6 @@
 import cloudinary from "../config/cloudinary.js";
 import Post from "../models/Post.js";
-
+import Calloborators from "../models/Calloborators.js";
 export const uploadImagesToCloud = async (files) => {
   const images = [];
 
@@ -28,22 +28,51 @@ export const validateVideoInfo = async (publicId) => {
   return info;
 };
 
-export const updateProjectFields = async (project, fields) => {
-  let update = false;
+export const updateProjectFields = async (
+  project,
+  fields,
+  collaborators,
+  postId
+) => {
+  let updated = false;
+
   for (const key in fields) {
     if (fields[key] !== undefined && fields[key] !== project[key]) {
       if (
-        fields[key] === "githubLink" &&
+        key === "github" &&
         !fields[key].startsWith("https://github.com/")
-      )
-        continue;
+      ) continue;
+
       if (key === "link" && !fields[key].startsWith("https://")) continue;
 
       project[key] = fields[key];
-      update = true;
+      updated = true;
     }
   }
-  if (!update) return "Nothing to update";
+
+  if (collaborators?.length > 0) {
+    const userIds = collaborators.map(c => c.userId);
+
+    const existing = await Calloborators.find({
+      userId: { $in: userIds },
+      postId
+    });
+
+    const existingIds = existing.map(c => c.userId);
+
+    const newCollaborators = collaborators.filter(
+      c => !existingIds.includes(c.userId)
+    );
+
+    if (newCollaborators.length > 0) {
+      project.collaborators.push(...newCollaborators);
+      updated = true;
+    }
+  }
+
+  if (!updated) return "Nothing to update";
+
   await project.save();
   return "Updated successfully";
 };
+

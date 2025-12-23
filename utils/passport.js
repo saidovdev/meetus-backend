@@ -8,7 +8,7 @@
         {
             clientID:process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: 'https://meet-nahm.onrender.com/api/auth/google/callback',
+            callbackURL: 'http://localhost:1747/api/auth/google/callback',
         },
         async(accessToken,refreshToken,profile,done)=>{
             try {

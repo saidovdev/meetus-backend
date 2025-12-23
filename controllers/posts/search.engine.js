@@ -3,6 +3,7 @@ import User from "../../models/User.js";
 export const searchEngine = async (req, res) => {
   try {
     const query = req.query.q?.trim();
+console.log("f");
 
     if (!query || query.length === 0) {
       return res.status(200).json([]);

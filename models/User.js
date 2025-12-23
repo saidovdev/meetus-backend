@@ -4,6 +4,8 @@ const MeetUsUserSchema = new mongoose.Schema(
     fullname: { type: String },
     idUser: { type: String },
     email: { type: String },
+    isonline:{type:Boolean,default:false},
+    lastSeen:{type:Date},
     username: { type: String },
     password: { type: String },
     profileImgPublicId: { type: String },

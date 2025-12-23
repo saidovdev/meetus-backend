@@ -6,6 +6,7 @@ const authenticateToken = require("../middleware/authenticateToken");
 router.get("/", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
+    
     const userInfo = await User.findById(userId).select("-password");
     if (!userInfo)
       return res.status(404).json({ message: "User va malumotlari topilmadi" });

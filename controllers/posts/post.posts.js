@@ -12,6 +12,7 @@ import {
   deleteProjectVideo,
   handleVideoUpdate,
 } from "../../services/video.service.js";
+import { add_number_post } from "../../services/post.service/add.number.post.js";
 
 import { send_post_to_collaborators } from "../../services/send.collaborators.service.js";
 import { validateIds } from "../../validators/posts.id.validator.js";
@@ -20,45 +21,61 @@ import mongoose from "mongoose";
 export const post_projects_with_images = async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log("salom");
 
-    const { collaborators } = req.body;
+    let { collaborators } = req.body;
 
-    const error = await validateProject(req.body);
+    if (typeof collaborators === "string") {
+      collaborators = JSON.parse(collaborators);
+    }
 
-    if (error.error) return res.status(400).json({ warning: error });
-    console.log(error);
+    const error = await validateProject({
+      ...req.body,
+      collaborators,
+    });
+
+    if (error.error)
+      return res.status(400).json({ warning: error });
 
     const images = req.files?.length
       ? await uploadImagesToCloud(req.files)
       : [];
 
-    console.log("ok");
-
     const project = new Post({
       userId: new mongoose.Types.ObjectId(userId),
       ...error.data,
+      collaborators,
       images,
     });
+
     await project.save();
 
-    if (collaborators.length > 0) {
-      const sendResult = await send_post_to_collaborators(
+    if (collaborators && collaborators.length > 0) {
+      await send_post_to_collaborators(
         collaborators,
         userId,
         project._id
       );
-
-      if (sendResult)
-        return res.status(201).json({
-          success: `Post created and upload successfully but something went wrong while sending post to collabrators ${sendResult}`,
-        });
     }
-    return res.status(200).json({ success: "Project created successfully" });
+
+    const add = await add_number_post(userId, project._id);
+
+    if (!add) {
+      return res.status(201).json({
+        success:
+          "Project created successfully but cannot add number to your post list",
+      });
+    }
+
+    return res.status(200).json({
+      success: "Project created successfully",
+    });
   } catch (error) {
     console.log("Error creating post:", error.message);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 export const post_project_with_video = async (req, res) => {
   try {
@@ -76,7 +93,6 @@ export const post_project_with_video = async (req, res) => {
 
     const error = await validateProject(req.body);
     if (error.error) return res.status(400).json({ warning: error });
-    console.log("salom1");
 
     const newProject = new Post({
       userId: new mongoose.Types.ObjectId(userId),
@@ -84,7 +100,6 @@ export const post_project_with_video = async (req, res) => {
       videoUrl: info.secure_url,
       videoId: info.public_id,
     });
-    console.log("salom2");
 
     await newProject.save();
 
@@ -100,6 +115,12 @@ export const post_project_with_video = async (req, res) => {
             "Post created and upload successfully but something went wrong while sending post to collabrators ",
         });
       }
+    }
+   const add= await add_number_post(userId,project._id)
+
+    if(add){
+      return  res.status(201).json({ success: "Project created successfully but cannot add number to your post list"  });
+
     }
     return res.status(200).json({ success: "Project created successfully" });
   } catch (error) {
@@ -165,7 +186,7 @@ export const put_project_with_video = async (req, res) => {
 export const put_project = async (req, res) => {
   const userId = req.user.id;
   const postId = req.params.id;
-
+const {collaborators}=req.body
   if (!postId)
     return res.status(400).json({ warning: "Post id is not defined" });
 
@@ -176,7 +197,7 @@ export const put_project = async (req, res) => {
     const project = await Post.findById(postId);
     if (!project) return res.status(404).json({ warning: "Project not found" });
 
-    const result = await updateProjectFields(project, req.body);
+    const result = await updateProjectFields({project,fields:req.body,collaborators,postId});
 
     if (result === "Nothing to update")
       return res.status(304).json({ warning: result });

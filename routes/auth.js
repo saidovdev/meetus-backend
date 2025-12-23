@@ -10,6 +10,8 @@ router.get(
   '/google/callback',
   passport.authenticate('google', { failureRedirect: '/api/auth/login/failed' }),
   async (req, res) => {
+    console.log('salom',req);
+    
     const user = req.user; 
     if (!user) {
       return res.redirect('/api/auth/login/failed');

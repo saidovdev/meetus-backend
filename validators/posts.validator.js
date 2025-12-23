@@ -37,7 +37,10 @@ export const validateProject = async (body) => {
     skills = [];
   }
 
+
+  
   try {
+
     collaborators =
       typeof collaborators === "string"
         ? JSON.parse(collaborators)
