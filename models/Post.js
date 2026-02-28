@@ -79,4 +79,7 @@ const PostSchema = mongoose.Schema(
   }
 );
 
+
+
+
 export default mongoose.model("UserPosts", PostSchema);
